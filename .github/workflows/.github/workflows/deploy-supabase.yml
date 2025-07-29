@@ -1,0 +1,34 @@
+cat << 'EOF' > .github/workflows/deploy-supabase.yml
+name: Deploy Supabase Edge Functions
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Supabase CLI locally
+        run: npm install supabase@latest
+
+      - name: Deploy Edge Functions
+        run: |
+          npx supabase link --project-ref $SUPABASE_PROJECT_REF
+          npx supabase functions deploy create-file-api
+          npx supabase functions deploy stripe-create-product-price
+          npx supabase functions deploy stripe-create-checkout
+          npx supabase functions deploy stripe-webhook
+EOF
+git add .github/workflows/deploy-supabase.yml
+git commit -m "ci: add GitHub Action for Supabase function deployment"
+git push
